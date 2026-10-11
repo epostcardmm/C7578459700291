@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Birthday Combined Interactive App</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #fce4ec;
+      background-image: 
+          radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0) 0%, rgba(252, 228, 236, 0) 70%),
+          url('https://i.pinimg.com/1200x/a0/22/fb/a022fb65e8e057359726977828761910.jpg');
+      background-blend-mode: soft-light;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+      color: #5d4037;
+    }
+
+    .view-page {
+      display: none;
+      width: 100%;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .view-page.active {
+      display: flex;
+    }
+
+    /* ================= Drag & Drop Lock Screen Styles ================= */
+    #lockView {
+      flex-direction: column;
+      gap: 20px;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .lock-card {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 35px 25px;
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+      max-width: 400px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border: 2px solid #f48fb1;
+      position: relative;
+      min-height: 280px;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .lock-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #880e4f;
+      margin-bottom: 8px;
+    }
+
+    .lock-subtitle {
+      font-size: 13px;
+      color: #ad1457;
+      margin-bottom: 30px;
+    }
+
+    .drop-zone-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 300px;
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .drag-item {
+      width: 80px;
+      height: 80px;
+      cursor: grab;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      touch-action: none;
+      transition: transform 0.2s;
+    }
+
+    .drag-item:active {
+      cursor: grabbing;
+    }
+
+    .drag-item img {
+      width: 75px;
+      height: 75px;
+      object-fit: contain;
+      filter: drop-shadow(0px 5px 10px rgba(0,0,0,0.15));
+      pointer-events: none;
+    }
+
+    .drop-target {
+      width: 90px;
+      height: 90px;
+      border: 3px dashed #ec407a;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #fce4ec;
+      position: relative;
+    }
+
+    .drop-target img {
+      width: 70px;
+      height: 70px;
+      object-fit: contain;
+      opacity: 0.8;
+    }
+
+    .success-popup {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 20px;
+      z-index: 30;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .success-popup img {
+      width: 110px;
+      height: 110px;
+      object-fit: contain;
+      animation: bounceEffect 0.8s infinite alternate;
+      margin-bottom: 15px;
+      filter: drop-shadow(0px 8px 15px rgba(236,64,122,0.3));
+    }
+
+    .success-popup .popup-text {
+      font-size: 16px;
+      font-weight: bold;
+      color: #880e4f;
+      letter-spacing: 0.5px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes bounceEffect {
+      from { transform: translateY(0); }
+      to { transform: translateY(-10px); }
+    }
+
+    /* ================= Other Views Styles ================= */
+    #mainView {
+      flex-direction: column;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .icon-btn {
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .icon-btn:hover {
+      transform: scale(1.08);
+    }
+
+    .top-image img {
+      width: 180px;
+      height: auto;
+      display: block;
+      filter: drop-shadow(0px 6px 12px rgba(0,0,0,0.15));
+    }
+
+    .bottom-images {
+      display: flex;
+      gap: 50px;
+      justify-content: center;
+    }
+
+    .bottom-images img {
+      width: 140px;
+      height: auto;
+      display: block;
+      filter: drop-shadow(0px 6px 12px rgba(0,0,0,0.15));
+    }
+
+    /* Styles for Main Screen Text Enhancements */
+    .screen-heading {
+      font-size: 24px;
+      font-weight: 700;
+      color: #880e4f;
+      font-family: 'Dancing Script', cursive, serif;
+      text-align: center;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .screen-subtext {
+      font-size: 13px;
+      color: #ad1457;
+      text-align: center;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 6px 16px;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      border: 1px solid #f8bbd0;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 22px;
+      cursor: pointer;
+      color: #888;
+      z-index: 20;
+    }
+
+    .close-btn:hover {
+      color: #000;
+    }
+
+    .back-nav-btn {
+      position: absolute;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #f48fb1, #ec407a);
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      box-shadow: 0 4px 15px rgba(236,64,122,0.3);
+      z-index: 100;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .back-nav-btn:hover {
+      transform: translateX(-50%) scale(1.05);
+      background: linear-gradient(135deg, #ec407a, #d81b60);
+    }
+
+    #albumView {
+      flex-direction: column;
+    }
+
+    .satchel-container {
+      position: relative;
+      width: 320px;
+      height: 400px;
+      margin-bottom: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    .photo-card {
+      position: absolute;
+      width: 260px;
+      height: 320px;
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      bottom: 20px;
+      transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+      transform-origin: bottom center;
+      cursor: pointer;
+      opacity: 0;
+      z-index: 1;
+    }
+
+    .photo-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .photo-card .caption {
+      margin-top: 15px;
+      font-size: 14px;
+      text-align: center;
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .satchel-container.open .photo-card {
+      opacity: 1;
+    }
+    .satchel-container.open .photo-card:nth-child(1) { transform: translateY(-70px) rotate(-16deg); z-index: 2; }
+    .satchel-container.open .photo-card:nth-child(2) { transform: translateY(-90px) rotate(-8deg); z-index: 3; }
+    .satchel-container.open .photo-card:nth-child(3) { transform: translateY(-100px) rotate(0deg); z-index: 4; }
+    .satchel-container.open .photo-card:nth-child(4) { transform: translateY(-90px) rotate(8deg); z-index: 5; }
+    .satchel-container.open .photo-card:nth-child(5) { transform: translateY(-70px) rotate(16deg); z-index: 6; }
+
+    .satchel-container.open .photo-card.active {
+      transform: translateY(-160px) scale(1.1) rotate(0deg) !important;
+      z-index: 10 !important;
+      box-shadow: 0 20px 35px rgba(0,0,0,0.2);
+    }
+    .satchel-container.open .photo-card.active .caption {
+      opacity: 1;
+    }
+
+    .satchel-bag {
+      position: absolute;
+      width: 300px;
+      height: 190px;
+      background: #f8bbd0;
+      border-radius: 0 0 25px 25px;
+      box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+      cursor: pointer;
+      z-index: 7;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-bottom: 20px;
+      border: 2px solid #ec407a;
+    }
+
+    .satchel-bag::before {
+      content: '';
+      position: absolute;
+      top: -45px;
+      left: -2px;
+      width: 300px;
+      height: 45px;
+      background: #f48fb1;
+      border-radius: 25px 25px 0 0;
+      transition: transform 0.5s;
+      transform-origin: bottom;
+      border: 2px solid #ec407a;
+      border-bottom: none;
+    }
+
+    .satchel-container.open .satchel-bag::before {
+      transform: rotateX(180deg) translateY(45px);
+      z-index: 0;
+    }
+
+    .bag-text {
+      color: #880e4f;
+      font-size: 18px;
+      font-weight: bold;
+      pointer-events: none;
+      letter-spacing: 1px;
+    }
+
+    .bag-subtext {
+      color: #ad1457;
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 5px;
+      pointer-events: none;
+    }
+
+    #musicView {
+      flex-direction: column;
+    }
+
+    .turntable-base {
+      width: 460px;
+      height: 360px;
+      background: linear-gradient(135deg, #4a1525 0%, #2a0812 100%);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.3), 0 0 25px rgba(230, 87, 133, 0.2);
+      position: relative;
+      z-index: 2;
+      margin-bottom: 30px;
+    }
+
+    .corner-gif {
+      position: absolute;
+      width: 75px;
+      height: 75px;
+      object-fit: contain;
+      pointer-events: none;
+      z-index: 20;
+      opacity: 0.95;
+    }
+    .top-left { top: 8px; left: 8px; transform: rotate(-15deg); }
+    .top-right { top: 8px; right: 8px; transform: rotate(15deg); }
+    .bottom-left { bottom: 8px; left: 8px; transform: rotate(15deg); }
+    .bottom-right { bottom: 8px; right: 8px; transform: rotate(-15deg); }
+
+    .deck {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, #fce4ec 0%, #f8bbd0 100%);
+      border-radius: 8px;
+      position: relative;
+      box-shadow: inset 0 0 8px rgba(0,0,0,0.1);
+      display: flex;
+    }
+
+    .platter-area {
+      width: 280px;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .record {
+      width: 250px;
+      height: 250px;
+      background: radial-gradient(circle, #1a0a10 35%, #2a101a 36%, #1a0a10 37%, #220d15 40%, #1a0a10 41%, #2a101a 46%, #1a0a10 47%, #220d15 50%, #1a0a10 51%, #2a101a 56%, #1a0a10 57%, #220d15 60%, #1a0a10 61%, #1a0a10 100%);
+      border-radius: 50%;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      transition: transform 0.5s ease;
+    }
+
+    .record.spinning {
+      animation: spin 2.5s linear infinite;
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
+    .record-label {
+      width: 95px;
+      height: 95px;
+      background: linear-gradient(135deg, #d81b60 0%, #880e4f 100%);
+      border-radius: 50%;
+      border: 3px solid #1a0a10;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #ffe0b2;
+      text-align: center;
+      padding: 5px;
+      user-select: none;
+      box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
+    }
+
+    .label-brand {
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      border-bottom: 1px solid #ffe0b2;
+      padding-bottom: 1px;
+      margin-bottom: 2px;
+      color: #fff;
+    }
+
+    .label-title {
+      font-size: 9px;
+      color: #fff;
+      font-weight: bold;
+      max-width: 75px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .label-artist {
+      font-size: 7px;
+      color: #f8bbd0;
+      margin-top: 1px;
+    }
+
+    .center-hole {
+      width: 10px;
+      height: 10px;
+      background: #e0e0e0;
+      border-radius: 50%;
+      position: absolute;
+      border: 2px solid #333;
+      box-shadow: inset 0 0 3px rgba(0,0,0,0.8);
+    }
+
+    .control-panel {
+      width: 130px;
+      height: 100%;
+      background: #3e1525;
+      margin-left: auto;
+      border-top-right-radius: 8px;
+      border-bottom-right-radius: 8px;
+      padding: 15px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+    }
+
+    .tonearm-container {
+      position: absolute;
+      right: 85px;
+      top: 35px;
+      z-index: 10;
+    }
+
+    .tonearm-base {
+      width: 35px;
+      height: 35px;
+      background: radial-gradient(circle, #f48fb1 0%, #ad1457 100%);
+      border-radius: 50%;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+    }
+
+    .tonearm {
+      width: 10px;
+      height: 145px;
+      position: absolute;
+      top: 15px;
+      left: 12px;
+      transform-origin: 5px 5px;
+      transform: rotate(-35deg);
+      transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .tonearm-stick {
+      width: 5px;
+      height: 125px;
+      background: linear-gradient(90deg, #ffe0b2 0%, #f48fb1 50%, #ffe0b2 100%);
+      margin: 0 auto;
+      border-radius: 2px;
+    }
+
+    .cartridge {
+      width: 13px;
+      height: 26px;
+      background: #880e4f;
+      margin: 0 auto;
+      border-radius: 2px;
+      border-bottom: 2px solid #ff4081;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    }
+
+    .tonearm.playing {
+      transform: rotate(22deg);
+    }
+
+    .visualizer {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 15px;
+      margin: 4px 0;
+    }
+
+    .bar {
+      width: 4px;
+      background: #ff4081;
+      border-radius: 2px;
+      height: 4px;
+      transition: height 0.2s ease;
+    }
+
+    .playing .bar {
+      animation: bounce 0.6s ease infinite alternate;
+    }
+
+    .bar:nth-child(2) { animation-delay: 0.2s; }
+    .bar:nth-child(3) { animation-delay: 0.4s; }
+    .bar:nth-child(4) { animation-delay: 0.1s; }
+
+    @keyframes bounce {
+      0% { height: 4px; }
+      100% { height: 16px; }
+    }
+
+    .knob-container {
+      text-align: center;
+    }
+
+    .knob {
+      width: 36px;
+      height: 36px;
+      background: radial-gradient(circle, #ff80ab 0%, #c2185b 100%);
+      border-radius: 50%;
+      border: 2px solid #880e4f;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+      cursor: pointer;
+      margin: 4px auto;
+      position: relative;
+      transition: transform 0.2s;
+    }
+
+    .knob::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      left: 15px;
+      width: 3px;
+      height: 8px;
+      background: #fff;
+      border-radius: 2px;
+    }
+
+    .knob:active {
+      transform: scale(0.95);
+    }
+
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      width: 100%;
+    }
+
+    .btn {
+      background: linear-gradient(180deg, #ad1457 0%, #880e4f 100%);
+      color: #fff;
+      border: 1px solid #c2185b;
+      padding: 5px 8px;
+      border-radius: 15px;
+      font-size: 9px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.2s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .btn:hover {
+      background: #ff4081;
+      color: #fff;
+    }
+
+    .playlist {
+      width: 100%;
+      background: #2a0812;
+      border-radius: 6px;
+      padding: 4px;
+      border: 1px solid #ad1457;
+    }
+
+    .playlist select {
+      width: 100%;
+      background: #3e1525;
+      color: #f8bbd0;
+      border: none;
+      padding: 4px;
+      font-size: 9px;
+      outline: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .heart {
+      position: absolute;
+      color: #ff4081;
+      font-size: 14px;
+      user-select: none;
+      pointer-events: none;
+      animation: floatUp 3s linear forwards;
+      z-index: 100;
+    }
+
+    @keyframes floatUp {
+      0% { transform: translateY(0) scale(0.6); opacity: 1; }
+      100% { transform: translateY(-120px) scale(1.4); opacity: 0; }
+    }
+
+    .emoji, .bottom-emoji {
+      position: absolute;
+      pointer-events: none;
+      animation: emojiFloat 1s ease-out;
+      font-size: 24px;
+      z-index: 999;
+    }
+
+    @keyframes emojiFloat {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(-50px) scale(1.5); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= VIEW 0: Drag & Drop Lock Screen ================= -->
+  <div id="lockView" class="view-page active">
+    <div class="lock-card">
+      <div class="lock-title">💖 Welcome to Special File 💖</div>
+      <div class="lock-subtitle">Drag the left sticker to the right to unlock</div>
+      
+      <div class="drop-zone-container">
+        <!-- Draggable Sticker (Left) -->
+        <div class="drag-item" id="dragSticker">
+          <img src="https://media.tenor.com/NeAiZhhN4kkAAAAi/beam-love.gif" alt="Drag Sticker">
+        </div>
+        
+        <div style="font-size: 20px; color: #ec407a; font-weight: bold;">➔</div>
+
+        <!-- Drop Target Sticker (Right) -->
+        <div class="drop-target" id="dropTarget">
+          <img src="https://media.tenor.com/GcJNco2l1c8AAAAi/bubu-dudu-sseeyall.gif" alt="Target Sticker">
+        </div>
+      </div>
+
+      <!-- New Success Popup (Appears when dropped, stays for 3 seconds) -->
+      <div class="success-popup" id="successPopup">
+        <img src="https://media.tenor.com/_YoesJxE1tYAAAAi/panda-%C3%B6p%C3%BCc%C3%BCk.gif" alt="New Sticker">
+        <div class="popup-text">✨ Unlocked Successfully! ✨</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= VIEW 1: Main Home Screen ================= -->
+  <div id="mainView" class="view-page">
+    <div class="container" style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
+      
+      <!-- Added Main Title -->
+      <div class="screen-heading">For You Only 💌</div>
+
+      <div class="top-image icon-btn" onclick="openModal('wishModal')">
+        <img src="https://media.tenor.com/S_THbhLJxokAAAAj/envelope-cora%C3%A7%C3%A3o-envelope.gif" alt="Mailbox Wish">
+      </div>
+
+      <div class="bottom-images">
+        <div class="icon-btn" onclick="switchView('musicView')">
+          <img src="https://media.tenor.com/dabUhljTbeYAAAAi/timpoulton-turntable.gif" alt="Music Player">
+        </div>
+
+        <div class="icon-btn" onclick="switchView('albumView')">
+          <img src="https://media.tenor.com/qwIRGM8GWM4AAAAi/groupgreeting-stickers-gg-stickers.gif" alt="Flower Bouquet">
+        </div>
+      </div>
+
+      <!-- Added Subtext Guide -->
+      <div class="screen-subtext">Tap any item to explore ✨</div>
+
+    </div>
+  </div>
+
+  <!-- Birthday Wish Modal -->
+  <div id="wishModal" class="modal" onclick="closeModal(event, 'wishModal')">
+    <div onclick="event.stopPropagation()" style="position: relative; width: 100%; max-width: 480px; margin: 20px;">
+      <span class="close-btn" onclick="closeModalById('wishModal')">&times;</span>
+      
+      <div style="position: relative; width: 100%; background-color: #fcf8f0; background-image: linear-gradient(90deg, transparent 54px, #f1a3a3 54px, #f1a3a3 56px, transparent 56px), repeating-linear-gradient(transparent, transparent 31px, #e4dacb 31px, #e4dacb 32px); background-size: 100% 100%, 100% 32px; padding: 45px 32px 45px 72px; border-radius: 2px 5px 3px 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1), 0 6px 0 -3px #f2ebd9, 0 6px 2px -2px rgba(0,0,0,0.12), 0 12px 0 -6px #e6dcda, 0 12px 2px -5px rgba(0,0,0,0.12), 0 22px 35px rgba(0, 0, 0, 0.2); transform: rotate(-1deg); font-family: 'Caveat', cursive, Georgia, serif;">
+        
+        <div style="text-align: center; margin-bottom: 8px;">
+          <img src="https://media.tenor.com/1zmS4Zjz2MEAAAAi/transparent-birthday.gif" alt="Bouquet Sticker" style="width: 85px; height: auto; display: inline-block; filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.18)); transform: rotate(-5deg);">
+        </div>
+
+        <div style="text-align: center; margin-bottom: 10px;">
+          <span style="display: inline-block; background: #ff4081; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; letter-spacing: 1px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transform: rotate(2deg);">💖 Special Day 💖</span>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="font-family: 'Dancing Script', cursive, serif; font-size: 34px; font-weight: 700; color: #7a3311;">Happy Birthday!</div>
+          <div style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 13px; color: #a06040; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px;">❖ A Special Wish For You ❖</div>
+        </div>
+
+        <div style="font-size: 20px; line-height: 32px; color: #2b211b; text-align: left; min-height: 150px;">
+          <p id="typed-text" style="white-space: pre-line;"></p>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 32px; padding-top: 5px;">
+          <div style="border: 2px dashed #ab7d43; padding: 6px 12px; border-radius: 3px; color: #ab7d43; font-family: serif; font-size: 11px; letter-spacing: 1px; text-align: center; transform: rotate(-5deg); background: rgba(255, 252, 245, 0.8);">
+            💌 WITH LOVE<br><span style="font-size: 9px; opacity: 0.85;">SPECIAL EDITION</span>
+          </div>
+          
+          <div style="text-align: right; font-size: 21px; color: #52230e; line-height: 32px;">
+            <p>With all my warmest thoughts <span style="color: #c0392b; font-size: 18px;">♥</span>,</p>
+            <p style="font-family: 'Dancing Script', cursive, serif; font-size: 26px; font-weight: 700; color: #7a3311;">Always Yours</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= VIEW 2: Album / Photos ================= -->
+  <div id="albumView" class="view-page" onclick="createAlbumEmojis(event)">
+    <div class="satchel-container" id="satchelContainer">
+      <div class="photo-card" onclick="selectPhoto(event, this)">
+        <img src="https://user43718.na.imgto.link/public/20261011/a3be044d9ab60aac57852787-photo-2026-10-11-20-57-06.avif" alt="Photo 1">
+        <div class="caption">‌အမြဲတမ်းအတွက်အမှတ်တရအဖြစ်ဆုံးအစားအစာ</div>
+      </div>
+      
+      <div class="photo-card" onclick="selectPhoto(event, this)">
+        <img src="https://user43718.na.imgto.link/public/20261011/81baa85b258118bacec8c737-photo-2026-10-11-20-50-20.avif" alt="Photo 2">
+        <div class="caption">May 19 9နာရီ 3မိနစ်ကပိုခဲ့တာ သူလည်းကော်ဖီကြိုက်တယ်တဲ့</div>
+      </div>
+      
+      <div class="photo-card" onclick="selectPhoto(event, this)">
+        <img src="https://user43718.na.imgto.link/public/20261011/d7503427f90223e502a02dc4-photo-2026-10-11-20-50-21.avif" alt="Photo 3">
+        <div class="caption">သေချာပေါက်အမြဲတမ်းသိမ်းထားဖြစ်မှာ</div>
+      </div>
+      
+      <div class="photo-card" onclick="selectPhoto(event, this)">
+        <img src="https://user43718.na.imgto.link/public/20261011/444e32553441b8ceb99f63ae-photo-2026-10-11-20-50-23.avif" alt="Photo 4">
+        <div class="caption">ဒုတိယမြောက်အမြဲတမ်းအတွက်အမှတ်တရ</div>
+      </div>
+      
+      <div class="photo-card" onclick="selectPhoto(event, this)">
+        <img src="https://user43718.na.imgto.link/public/20261011/92bd4b844ee0cd7606b053e0-photo-2026-10-11-20-50-16.avif" alt="Photo 5">
+        <div class="caption">May 3ရက်နေ့ 1နာရီ 15က မီတိုဆီလည်းပိတောက်ပန်းပွင့်ပြီ တဲ့</div>
+      </div>
+
+      <div class="satchel-bag" onclick="toggleSatchel(event)">
+        <div class="bag-text">Open Satchel</div>
+        <div class="bag-subtext">Tap to Reveal Memories</div>
+      </div>
+    </div>
+
+    <button class="back-nav-btn" onclick="switchView('mainView')">← Back to Home</button>
+  </div>
+
+  <!-- ================= VIEW 3: Music Player ================= -->
+  <div id="musicView" class="view-page">
+    <div class="turntable-base">
+      <img src="https://media.tenor.com/m0_8jBqxiEwAAAAi/tkthao219-bubududu.gif" class="corner-gif top-left" alt="Corner GIF">
+      <img src="https://media.tenor.com/9KafmEXl04cAAAAi/peach-goma.gif" class="corner-gif top-right" alt="Corner GIF">
+      <img src="https://media.tenor.com/9KafmEXl04cAAAAi/peach-goma.gif" class="corner-gif bottom-left" alt="Corner GIF">
+      <img src="https://media.tenor.com/m0_8jBqxiEwAAAAi/tkthao219-bubududu.gif" class="corner-gif bottom-right" alt="Corner GIF">
+
+      <div class="deck">
+          <div class="platter-area">
+              <div class="record" id="record">
+                  <div class="record-label">
+                      <div class="label-brand">LOVE</div>
+                      <div class="label-title" id="display-title">Track 1</div>
+                      <div class="label-artist" id="display-artist">Artist 1</div>
+                  </div>
+              </div>
+              <div class="center-hole"></div>
+          </div>
+
+          <div class="tonearm-container">
+              <div class="tonearm-base"></div>
+              <div class="tonearm" id="tonearm">
+                  <div class="tonearm-stick"></div>
+                  <div class="cartridge"></div>
+              </div>
+          </div>
+
+          <div class="control-panel">
+              <div class="playlist">
+                  <select id="songSelect" onchange="changeSong()">
+                      <option value="0">1. Romantic Melody</option>
+                      <option value="1">2. Love Acoustic</option>
+                      <option value="2">3. Sweet Ballad</option>
+                  </select>
+              </div>
+
+              <div class="visualizer" id="visualizer">
+                  <div class="bar"></div>
+                  <div class="bar"></div>
+                  <div class="bar"></div>
+                  <div class="bar"></div>
+              </div>
+
+              <div class="knob-container">
+                  <div class="knob" id="playKnob" onclick="togglePlay()"></div>
+                  <span style="color: #f8bbd0; font-size: 8px; letter-spacing: 0.5px;">PLAY/PAUSE</span>
+              </div>
+
+              <div class="btn-group">
+                  <button class="btn" onclick="prevSong()"></button>
+                  <button class="btn" onclick="nextSong()"></button>
+              </div>
+          </div>
+      </div>
+    </div>
+    <audio id="audioPlayer"></audio>
+    <button class="back-nav-btn" onclick="switchView('mainView'); pause();">← Back to Home</button>
+  </div>
+
+
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
+  <script>
+    function switchView(viewId) {
+      document.querySelectorAll('.view-page').forEach(page => {
+        page.classList.remove('active');
+      });
+      document.getElementById(viewId).classList.add('active');
+    }
+
+    const dragItem = document.getElementById('dragSticker');
+    const dropTarget = document.getElementById('dropTarget');
+    const successPopup = document.getElementById('successPopup');
+
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let currentY = 0;
+
+    dragItem.style.touchAction = 'none';
+
+    dragItem.addEventListener('pointerdown', (e) => {
+      isDragging = true;
+      startX = e.clientX - currentX;
+      startY = e.clientY - currentY;
+      dragItem.setPointerCapture(e.pointerId);
+    });
+
+    dragItem.addEventListener('pointermove', (e) => {
+      if (!isDragging) return;
+      currentX = e.clientX - startX;
+      currentY = e.clientY - startY;
+      dragItem.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+    });
+
+    dragItem.addEventListener('pointerup', (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      dragItem.releasePointerCapture(e.pointerId);
+
+      const dragRect = dragItem.getBoundingClientRect();
+      const targetRect = dropTarget.getBoundingClientRect();
+
+      const overlap = !(
+        dragRect.right < targetRect.left || 
+        dragRect.left > targetRect.right || 
+        dragRect.bottom < targetRect.top || 
+        dragRect.top > targetRect.bottom
+      );
+
+      if (overlap) {
+        dragItem.style.transition = "transform 0.3s ease";
+        dragItem.style.transform = `translate3d(${targetRect.left - dragRect.left + currentX}px, ${targetRect.top - dragRect.top + currentY}px, 0)`;
+        
+        successPopup.style.display = 'flex';
+
+        setTimeout(() => {
+          successPopup.style.display = 'none';
+          dragItem.style.transform = 'translate3d(0px, 0px, 0)';
+          dragItem.style.transition = '';
+          currentX = 0;
+          currentY = 0;
+          switchView('mainView');
+        }, 3000);
+      } else {
+        dragItem.style.transition = "transform 0.4s ease";
+        currentX = 0;
+        currentY = 0;
+        dragItem.style.transform = 'translate3d(0px, 0px, 0)';
+        setTimeout(() => { dragItem.style.transition = ""; }, 400);
+      }
+    });
+
+    const messageText = `Wishing you a wonderfully happy birthday! 
+    
+    အနာဂတ်မှာပိုလှတဲ့နေ့တွေနဲ့အတူ၊ကောင်းမွန်တဲ့အမှတ်တရတွေဖန်တီးနိုင်ပြီး သာယာပျော်ရွှင်တဲ့ဘဝအသက်တာကိုပိုင်ဆိုင်နိုင်ဖိုဆန္ဒပြုပါတယ်နော်🍁မွေးနေ့မှစနေ့ရက်တိုင်းပျော်ရွှင်ချမ်းမြေ့ပါစေကွယ်❤️`;
+    
+    let typingTimer = null;
+
+    function openModal(id) {
+      document.getElementById(id).style.display = 'flex';
+      startTypingEffect();
+    }
+
+    function startTypingEffect() {
+      const typedContainer = document.getElementById('typed-text');
+      typedContainer.innerHTML = "";
+      clearTimeout(typingTimer);
+      
+      let index = 0;
+      function type() {
+        if (index < messageText.length) {
+          typedContainer.innerHTML += messageText.charAt(index);
+          index++;
+          typingTimer = setTimeout(type, 35);
+        }
+      }
+      type();
+    }
+
+    function closeModalById(id) {
+      document.getElementById(id).style.display = 'none';
+      clearTimeout(typingTimer);
+    }
+
+    function closeModal(event, id) {
+      if (event.target.classList.contains('modal')) {
+        document.getElementById(id).style.display = 'none';
+        clearTimeout(typingTimer);
+      }
+    }
+
+    const satchelContainer = document.getElementById('satchelContainer');
+    const emojisList = ['🌸', '✨', '🤍', '☕', '🌷', '🌍', '😊', '📸', '💖'];
+
+    function createAlbumEmojis(event) {
+      for (let i = 0; i < 3; i++) {
+        const emoji = document.createElement('div');
+        emoji.className = 'emoji';
+        emoji.innerText = emojisList[Math.floor(Math.random() * emojisList.length)];
+        emoji.style.left = (event.clientX - 12) + 'px';
+        emoji.style.top = (event.clientY - 12) + 'px';
+        document.body.appendChild(emoji);
+        setTimeout(() => emoji.remove(), 1000);
+      }
+    }
+
+    function createBottomEmojis() {
+      for (let i = 0; i < 5; i++) {
+        const emoji = document.createElement('div');
+        emoji.className = 'bottom-emoji';
+        emoji.innerText = emojisList[Math.floor(Math.random() * emojisList.length)];
+        const randomOffset = (Math.random() - 0.5) * 100;
+        emoji.style.left = `calc(50% + ${randomOffset}px)`;
+        emoji.style.bottom = '40px';
+        satchelContainer.appendChild(emoji);
+        setTimeout(() => emoji.remove(), 1000);
+      }
+    }
+
+    function toggleSatchel(event) {
+      event.stopPropagation();
+      satchelContainer.classList.toggle('open');
+      if (!satchelContainer.classList.contains('open')) {
+        const activeCard = document.querySelector('.photo-card.active');
+        if (activeCard) activeCard.classList.remove('active');
+      } else {
+        createBottomEmojis();
+      }
+    }
+
+    function selectPhoto(event, card) {
+      if (!satchelContainer.classList.contains('open')) return;
+      event.stopPropagation();
+      const currentActive = document.querySelector('.photo-card.active');
+      if (currentActive && currentActive !== card) {
+        currentActive.classList.remove('active');
+      }
+      const isNowActive = card.classList.toggle('active');
+      if (isNowActive) createBottomEmojis();
+    }
+
+    const songs = [
+      { title: "Romantic Melody", artist: "Sweet Orchestra", src: "https://www.image2url.com/r2/default/audio/1791729490799-5aaff6bd-4322-478d-a72b-6da5a7754d49.mp3" },
+      { title: "Love Acoustic", artist: "Heart Strings", src: "https://www.image2url.com/r2/default/audio/1791729550441-545d9e15-efda-4d33-93d2-b07db765d7f8.mp3" },
+      { title: "Sweet Ballad", artist: "Vintage Love", src: "https://www.image2url.com/r2/default/audio/1791731029243-95461b0e-5b3c-4883-b83a-6591ee456457.mp3" }
+    ];
+
+    let currentIndex = 0;
+    let isPlaying = false;
+    let heartInterval;
+
+    const audio = document.getElementById('audioPlayer');
+    const record = document.getElementById('record');
+    const tonearm = document.getElementById('tonearm');
+    const displayTitle = document.getElementById('display-title');
+    const displayArtist = document.getElementById('display-artist');
+    const songSelect = document.getElementById('songSelect');
+    const visualizer = document.getElementById('visualizer');
+
+    function loadTrack(index) {
+      audio.src = songs[index].src;
+      displayTitle.innerText = songs[index].title;
+      displayArtist.innerText = songs[index].artist;
+      songSelect.value = index;
+    }
+
+    loadTrack(currentIndex);
+
+    function togglePlay() {
+      if (isPlaying) { pause(); } else { play(); }
+    }
+
+    function play() {
+      isPlaying = true;
+      audio.play();
+      record.classList.add('spinning');
+      tonearm.classList.add('playing');
+      visualizer.classList.add('playing');
+      startHearts();
+    }
+
+    function pause() {
+      isPlaying = false;
+      audio.pause();
+      record.classList.remove('spinning');
+      tonearm.classList.remove('playing');
+      visualizer.classList.remove('playing');
+      stopHearts();
+    }
+
+    function startHeartsS() {
+      if (heartInterval) return;
+      heartInterval = setInterval(() => {
+        const heart = document.createElement('div');
+        heart.classList.add('heart');
+        heart.innerHTML = '❤️';
+        heart.style.left = (Math.random() * 350) + 'px';
+        heart.style.bottom = '50px';
+        document.getElementById('musicView').appendChild(heart);
+        setTimeout(() => heart.remove(), 3000);
+      }, 400);
+    }
+    
+    function startHearts() { startHeartsS(); }
+
+    function stopHearts() {
+      clearInterval(heartInterval);
+      heartInterval = null;
+    }
+
+    function changeSong() {
+      currentIndex = parseInt(songSelect.value);
+      const wasPlaying = isPlaying;
+      pause();
+      loadTrack(currentIndex);
+      if (wasPlaying) setTimeout(play, 600);
+    }
+
+    function nextSong() {
+      currentIndex = (currentIndex + 1) % songs.length;
+      changeSong();
+    }
+
+    function prevSong() {
+      currentIndex = (currentIndex - 1 + songs.length) % songs.length;
+      changeSong();
+    }
+
+    audio.onended = () => { nextSong(); };
+  </script>
+</body>
+</html>
